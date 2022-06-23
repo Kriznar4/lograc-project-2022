@@ -19,19 +19,19 @@ module Equivalence (Symbol : Set) (eq : Decidable {A = Symbol} _≡_) where
   open RegExp Symbol
   open Automaton Symbol
   open Compile Symbol eq
+  open NFA
   open 1-Symbol Symbol eq
-  open NFA 
   open EmptySymbol
 
   regexp-nfa : ∀ {r : RegExpr} {w : List Symbol} → Match r w → Accept (compile r) [ start (compile r) ] w
-  regexp-nfa match-ε with start (compile ε)
-  ...  | state-accept  = accept-[] (here refl) tt
-  ...  | state-reject = ⊥-elim {!  !}
+  regexp-nfa match-ε with start (compile ε) | inspect start (compile ε)
+  ...  | state-accept | _  = accept-[] (here refl) tt
+  ...  | state-reject | [ q ]' = ⊥-elim {! q refl !}
   
   regexp-nfa (match-^ {a}) with eq a a | inspect (eq a) a
   ... | yes p | [ ξ ]' = accept-∷ (subst (λ b → Accept (1-symbol a) ((if does b then state-accept ∷ [] else state-reject ∷ []) ++ []) []) (sym ξ)
                           (accept-[] (here refl) tt))
-  ... | no q | foo =  ⊥-elim (q refl)
+  ... | no q | _ =  ⊥-elim (q refl)
 
   regexp-nfa (match-⊕-l p) = {!!}
   regexp-nfa (match-⊕-r p) = {!!}
