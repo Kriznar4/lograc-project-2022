@@ -31,14 +31,17 @@ module Equivalence (Symbol : Set) (eq : Decidable {A = Symbol} _≡_) where
                           (accept-[] (here refl) tt))
   ... | no q | _ =  ⊥-elim (q refl)
 
-  regexp-nfa (match-⊕-l p) = {!   !}
+  regexp-nfa {r} {w} (match-⊕-l p) with start (compile r)
+  ... | state = {!   !}
+
   regexp-nfa (match-⊕-r p) = {!!}
 
-  regexp-nfa (match-∙ p q) = {!  !}
+  regexp-nfa {.(r₁ ∙ r₂)} {.([] ++ w₂)} (RegExp.match-∙ {[]} {w₂} {r₁} {r₂} matchR₁ matchR₂) = {!  !}
+  regexp-nfa {.(r₁ ∙ r₂)} {.((x ∷ w₁) ++ w₂)} (RegExp.match-∙ {x ∷ w₁} {w₂} {r₁} {r₂} matchR₁ matchR₂) = {!    !}
 
   regexp-nfa match-*-[] = accept-[] (here refl) tt
   regexp-nfa (match-*-++ p q) = {!   !}
 
   nfa-regexp : ∀ (r : RegExpr) (w : List Symbol) → NFA.Accept (compile r) [ NFA.start (compile r) ] w → Match r w
   nfa-regexp r w p = {!!}
-  
+   
