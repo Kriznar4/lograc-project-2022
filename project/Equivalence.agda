@@ -41,4 +41,14 @@ module Equivalence (Symbol : Set) (eq : Decidable {A = Symbol} _≡_) where
 
   nfa-regexp : ∀ (r : RegExpr) (w : List Symbol) → NFA.Accept (compile r) [ NFA.start (compile r) ] w → Match r w
   nfa-regexp r w p = {!!}
+   
+
+  sequence-lemma : ∀ {r₁ r₂ : RegExpr} {w₁ w₂ : List Symbol} → 
+                Accept (compile r₁) [ start (compile r₁) ] w₁ →
+                Accept (compile r₂) [ start (compile r₂) ] w₂ →
+                -----------------------------------------------
+                Accept (compile (r₁ ∙ r₂)) [ start (compile (r₁ ∙ r₂)) ] (w₁ ++ w₂)
+  sequence-lemma {r₁} {r₂} {w₁} {w₂} with (compile r₁)
+  ... | record { State = State₁ ; start = start₁ ; next = next₁ ; accept = accept₁ } with (compile r₂)
+  ... | record { State = State₂ ; start = start₂ ; next = next₂ ; accept = accept₂ } = {!   !}
   
