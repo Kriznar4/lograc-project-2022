@@ -23,13 +23,12 @@ module Repeat (Symbol : Set) where
       { State = Initial-State ⊎ State A
       ; start = inj₁ state-accept
       ; next = λ { a (inj₁ s) → map inj₂ (next A a (start A))
-                 ; a (inj₂ s) → concat (map maybe-jump (next A a s))
+                 ; a (inj₂ s) → concat (map maybe-initial (next A a s))
                  }
       ; accept = λ { (inj₁ _) → true ; (inj₂ _) → false }
       }
     where
-      maybe-jump : State A → List (Initial-State ⊎ State A)
-      maybe-jump s with accept A s
+      maybe-initial : State A → List (Initial-State ⊎ State A)
+      maybe-initial s with accept A s
       ... | false = [ inj₂ s ]
       ... | true =  inj₂ s ∷ inj₁ state-accept ∷ []
-    

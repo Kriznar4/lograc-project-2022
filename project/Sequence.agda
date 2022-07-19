@@ -19,13 +19,8 @@ module Sequence (Symbol : Set) where
     record
       { State = State A ⊎ State B
       ; start =  inj₁ (start A)
-      ; next = λ { a (inj₁ s) → concat (map maybe-jump (next A a s))
+      ; next = λ { a (inj₁ s) → concat (map (maybe-jump A B) (next A a s))
                  ; a (inj₂ s) → map inj₂ (next B a s)
                  }
       ; accept = λ { (inj₁ _) → false ; (inj₂ s) → accept B s }
       }
-   where
-     maybe-jump : State A → List (State A ⊎ State B)
-     maybe-jump s with accept A s
-     ... | false = [ inj₁ s ]
-     ... | true =  inj₁ s ∷ inj₂ (start B) ∷ []
