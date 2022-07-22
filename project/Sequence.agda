@@ -19,8 +19,15 @@ module Sequence (Symbol : Set) where
     record
       { State = State A ⊎ State B
       ; start =  inj₁ (start A)
-      ; next = λ { a (inj₁ s) → concat (map (maybe-jump A B) (next A a s))
-                 ; a (inj₂ s) → map inj₂ (next B a s)
+      ; step = λ { a (inj₁ s) → inj₁ (step A a s)
+                 ; a (inj₂ s) → inj₂ (step B a s)
                  }
+      ; silent = sequence-silent
       ; accept = λ { (inj₁ _) → false ; (inj₂ s) → accept B s }
       }
+      where
+        sequence-silent : State A ⊎ State B → List (State A ⊎ State B)
+        sequence-silent (inj₁ s) with accept A s
+        ... | false = map inj₁ (silent A s)
+        ... | true = inj₂ (start B) ∷ map inj₁ (silent A s)
+        sequence-silent (inj₂ s) = map inj₂ (silent B s)

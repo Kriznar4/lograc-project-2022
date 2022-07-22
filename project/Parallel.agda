@@ -14,20 +14,29 @@ module Parallel (Symbol : Set) where
   open Automaton Symbol
   open NFA
 
-  data Parallel-State : Set where
-    state-start : Parallel-State
+  data ParallelState (S : Set) (T : Set) : Set where
+    silent-start : ParallelState S T
+    silent-reject : ParallelState S T
+    silent-left : S → ParallelState S T
+    silent-right : T → ParallelState S T
 
   parallel : NFA → NFA → NFA
   parallel A B =
     record
-      { State = Parallel-State ⊎ (State A ⊎ State B)  
-      ; start =  inj₁ state-start
-      ; next = λ { a (inj₁ _) → map inj₂ (concat (map inj₁ (next A a (start A)) ∷ map inj₂ (next B a (start B)) ∷ [])) -- We add state-start as start state and ε transitions to start of A and B. To get rid of ε tranzitions we make transitions state-start -(ε)→ start A -(simbol s)→ next with state-start -(simbol s)→ next
-                 ; a (inj₂ (inj₁ s)) → map inj₂ (map inj₁ (next A a s))
-                 ; a (inj₂ (inj₂ s)) → map inj₂ (map inj₂ (next B a s))}
-      ; accept = λ {(inj₁ _) → false
-                  ; (inj₂ (inj₁ s)) → accept A s
-                  ; (inj₂ (inj₂ s)) → accept B s}
+      { State = ParallelState (State A) (State B)
+      ; start =  silent-start
+      ; step = λ { a silent-start → silent-reject
+                 ; a silent-reject → silent-reject
+                 ; a (silent-left s) → silent-left (step A a s)
+                 ; a (silent-right s) → silent-right (step B a s)
+                 }
+      ; silent = λ { silent-start → silent-left (start A) ∷ silent-right (start B) ∷ []
+                   ; silent-reject → []
+                   ; (silent-left s) → map silent-left (silent A s)
+                   ; (silent-right s) → map silent-right (silent B s)
+                   }
+      ; accept = λ { silent-start → false
+                   ; silent-reject → false
+                   ; (silent-left s) → accept A s
+                   ; (silent-right s) → accept B s}
       }
-   
- 

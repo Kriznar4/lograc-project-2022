@@ -18,9 +18,10 @@ module EmptySymbol (Symbol : Set) where
       record
         { State = Empty-State
         ; start = state-accept
-        ; next = λ { _ state-accept → [ state-reject ]
-                   ; _ state-reject → [ state-reject ]
+        ; step = λ { _ state-accept → state-reject
+                   ; _ state-reject → state-reject
                    }
+        ; silent = λ _ → []
         ; accept = λ { state-accept → true
                      ; state-reject → false}
         }

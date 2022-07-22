@@ -23,10 +23,11 @@ module 1-Symbol (Symbol : Set) (eq : Decidable {A = Symbol} _≡_) where
       record
         { State = 1-State
         ; start = state-start
-        ; next = λ { b state-start →  if does (eq a b) then [ state-accept ] else [ state-reject ]
-                   ; b state-accept → [ state-reject ]
-                   ; b state-reject → [ state-reject ]
+        ; step = λ { b state-start →  if does (eq a b) then state-accept else state-reject
+                   ; b state-accept → state-reject
+                   ; b state-reject → state-reject
                    }
+        ; silent = λ _ → []
         ; accept = λ { state-start → false
                      ; state-accept → true
                      ; state-reject → false}

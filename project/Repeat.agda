@@ -6,6 +6,7 @@ open import Data.List
 open import Relation.Binary.PropositionalEquality hiding ([_])
 open import Relation.Binary
 open import Relation.Nullary
+open import Data.Maybe hiding (map)
 
 import Automaton
 
@@ -14,21 +15,29 @@ module Repeat (Symbol : Set) where
   open Automaton Symbol
   open NFA
 
-  data Initial-State : Set where
-    state-accept : Initial-State
+  data RepeatState (S : Set) : Set where
+    repeat-start : RepeatState S
+    repeat-reject : RepeatState S
+    repeat-original : S → RepeatState S
 
   repeat : NFA → NFA
   repeat A =
     record
-      { State = Initial-State ⊎ State A
-      ; start = inj₁ state-accept
-      ; next = λ { a (inj₁ s) → map inj₂ (next A a (start A))
-                 ; a (inj₂ s) → concat (map maybe-initial (next A a s))
+      { State = RepeatState (State A)
+      ; start = repeat-start
+      ; step = λ { _ repeat-start → repeat-reject
+                 ; _ repeat-reject → repeat-reject
+                 ; a (repeat-original s) → repeat-original (step A a s)
                  }
-      ; accept = λ { (inj₁ _) → true ; (inj₂ _) → false }
+      ; silent = repeat-silent
+      ; accept = λ { repeat-start → true
+                   ; repeat-reject → false
+                   ; (repeat-original _) → false }
       }
-    where
-      maybe-initial : State A → List (Initial-State ⊎ State A)
-      maybe-initial s with accept A s
-      ... | false = [ inj₂ s ]
-      ... | true =  inj₂ s ∷ inj₁ state-accept ∷ []
+     where
+       repeat-silent : RepeatState (State A) → List (RepeatState (State A))
+       repeat-silent repeat-start = [ repeat-original (start A) ]
+       repeat-silent repeat-reject = []
+       repeat-silent (repeat-original s) with accept A s
+       ... | false = map repeat-original (silent A s)
+       ... | true =  repeat-start ∷ map repeat-original (silent A s)

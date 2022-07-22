@@ -17,6 +17,7 @@ module EmptySet (Symbol : Set) where
       record
         { State = EmptySet-State
         ; start = state-reject
-        ; next = λ _ state-reject → [ state-reject ]
+        ; step = λ _ state-reject → state-reject
+        ; silent = λ _ → []
         ; accept = λ state-reject → false
         }
