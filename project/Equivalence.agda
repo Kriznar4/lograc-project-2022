@@ -25,6 +25,17 @@ module Equivalence (Symbol : Set) (eq : Decidable {A = Symbol} _≡_) where
   open 1-Symbol Symbol eq
   open EmptySymbol
 
+  regexp-nfa : ∀ {r : RegExpr} {w : List Symbol} → Match r w → Accept (compile r) (start (compile r) ) w
+  regexp-nfa match-ε = accept-[] tt
+  regexp-nfa (match-^ {a}) with eq a a | inspect (eq a) a
+  ... | yes p | [ ξ ]' = accept-∷ (subst (λ b → Accept (1-symbol a) (if does b then state-accept else state-reject) []) (sym ξ) (accept-[] tt))
+  ... | no q | _ = ⊥-elim (q refl)
+  regexp-nfa (match-⊕-l p) = {!   !}
+  regexp-nfa (match-⊕-r p) = {!   !}
+  regexp-nfa (match-∙ p q) = {!   !}
+  regexp-nfa match-*-[] = accept-[] tt
+  regexp-nfa (match-*-++ p q) = {!   !}
+
   -- regexp-nfa : ∀ {r : RegExpr} {w : List Symbol} → Match r w → Accept (compile r) [ start (compile r) ] w
   -- regexp-nfa match-ε = accept-[] (here refl) tt
 
