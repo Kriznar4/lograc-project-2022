@@ -39,8 +39,8 @@ module Equivalence (Symbol : Set) (eq : Decidable {A = Symbol} _≡_) where
                   Accept (compile r₁) s₁ w₁ →
                   Accept (compile r₂) (start (compile r₂)) w₂ →
                   Accept (compile (r₁ ∙ r₂)) (inj₁ s₁) (w₁ ++ w₂)
-    sequence-step₁ (accept-[] t) q = accept-silent {!   !} (sequence-step₂ q)
-    sequence-step₁ (accept-silent e p) q = accept-silent {!   !} (sequence-step₁ p q)
+    sequence-step₁ (accept-[] t) q = accept-silent {!  !} (sequence-step₂ q)
+    sequence-step₁ (accept-silent e p) q = accept-silent {!  !} (sequence-step₁ p q)
     sequence-step₁ (accept-∷ p) q = accept-∷ (sequence-step₁ p q)
 
   module ParallelStep {r₁ r₂ : RegExpr} where
@@ -75,26 +75,10 @@ module Equivalence (Symbol : Set) (eq : Decidable {A = Symbol} _≡_) where
   -- how to get r₁, r₂, w₁ and w₂ in context? and also r₁ = r₁ etc.?
   -- { r₁ = r₁ } { r₂ = r₂ }
 
-
-
   regexp-nfa match-*-[] = accept-[] tt
   regexp-nfa (match-*-++ p q) = {!   !}
 
-  -- regexp-nfa : ∀ {r : RegExpr} {w : List Symbol} → Match r w → Accept (compile r) [ start (compile r) ] w
-  -- regexp-nfa match-ε = accept-[] (here refl) tt
 
-  -- regexp-nfa (match-^ {a}) with eq a a | inspect (eq a) a
-  -- ... | yes p | [ ξ ]' = accept-∷ (subst (λ b → Accept (1-symbol a) ((if does b then state-accept ∷ [] else state-reject ∷ []) ++ []) []) (sym ξ)
-  --                         (accept-[] (here refl) tt))
-  -- ... | no q | _ =  ⊥-elim (q refl)
-
-  -- regexp-nfa (match-⊕-l p) = {!   !}
-  -- regexp-nfa (match-⊕-r p) = {!!}
-
-  -- regexp-nfa (match-∙ p q) = {!  !}
-
-  -- regexp-nfa match-*-[] = accept-[] (here refl) tt
-  -- regexp-nfa (match-*-++ p q) = {!   !}
 
   nfa-regexp : ∀ (r : RegExpr) (w : List Symbol) → NFA.Accept (compile r) (start (compile r) ) w → Match r w
   nfa-regexp r w p = {!!}
