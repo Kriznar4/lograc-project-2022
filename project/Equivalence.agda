@@ -15,6 +15,7 @@ import RegExp
 import Automaton
 import Compile
 import EmptySymbol
+import Parallel
 
 module Equivalence (Symbol : Set) (eq : Decidable {A = Symbol} _≡_) where
 
@@ -25,6 +26,32 @@ module Equivalence (Symbol : Set) (eq : Decidable {A = Symbol} _≡_) where
   open 1-Symbol Symbol eq
   open EmptySymbol
 
+
+  module SequenceStep {r₁ r₂ : RegExpr} where
+
+    sequence-step₂ : ∀ {w₂ : List Symbol} {s₂ : State (compile r₂)} →
+                  Accept (compile r₂) s₂ w₂ →
+                  Accept (compile (r₁ ∙ r₂)) (inj₂ s₂) w₂
+    sequence-step₂ (accept-[] t) = accept-[] t
+    sequence-step₂ (accept-silent p q) = accept-silent (∈-map⁺ inj₂ p) (sequence-step₂ q)
+    sequence-step₂ (accept-∷ p) = accept-∷ (sequence-step₂ p)
+
+    sequence-step₁ : ∀ {w₁ w₂ : List Symbol} {s₁ : State (compile r₁)} →
+                  Accept (compile r₁) s₁ w₁ →
+                  Accept (compile r₂) (start (compile r₂)) w₂ →
+                  Accept (compile (r₁ ∙ r₂)) (inj₁ s₁) (w₁ ++ w₂)
+    sequence-step₁ (accept-[] t) q = accept-silent {!!} (sequence-step₂ q)
+    sequence-step₁ (accept-silent e p) q = accept-silent {!!} (sequence-step₁ p q)
+    sequence-step₁ (accept-∷ p) q = accept-∷ (sequence-step₁ p q)
+  
+  open SequenceStep 
+
+  module ParallelStep {r₁ r₂ : RegExpr} where
+    parallel-stepₗ : ∀ {w₁ w₂ : List Symbol} {s₁ : State (compile r₁)} →
+                  Accept (compile r₁) s₁ w₁ →
+                  Accept (compile (r₁ ⊕ r₂)) (Parallel.ParallelState.silent-left s₁) w₁
+    parallel-stepₗ = {!   !}
+
   regexp-nfa : ∀ {r : RegExpr} {w : List Symbol} → Match r w → Accept (compile r) (start (compile r) ) w
   regexp-nfa match-ε = accept-[] tt
   regexp-nfa (match-^ {a}) with eq a a | inspect (eq a) a
@@ -32,7 +59,14 @@ module Equivalence (Symbol : Set) (eq : Decidable {A = Symbol} _≡_) where
   ... | no q | _ = ⊥-elim (q refl)
   regexp-nfa (match-⊕-l p) = {!   !}
   regexp-nfa (match-⊕-r p) = {!   !}
-  regexp-nfa (match-∙ p q) = {!   !}
+  regexp-nfa { r₁ ∙ r₂ } { w } (match-∙ p q)  = {!   !} 
+  -- for some reason this gets blocked
+  -- regexp-nfa (match-∙ p q) = sequence-step₁ (regexp-nfa p) (regexp-nfa q)
+  -- how to get r₁, r₂, w₁ and w₂ in context? and also r₁ = r₁ etc.?
+  -- { r₁ = r₁ } { r₂ = r₂ }
+
+
+
   regexp-nfa match-*-[] = accept-[] tt
   regexp-nfa (match-*-++ p q) = {!   !}
 
@@ -52,23 +86,9 @@ module Equivalence (Symbol : Set) (eq : Decidable {A = Symbol} _≡_) where
   -- regexp-nfa match-*-[] = accept-[] (here refl) tt
   -- regexp-nfa (match-*-++ p q) = {!   !}
 
-  -- nfa-regexp : ∀ (r : RegExpr) (w : List Symbol) → NFA.Accept (compile r) [ start (compile r) ] w → Match r w
-  -- nfa-regexp r w p = {!!}
+  nfa-regexp : ∀ (r : RegExpr) (w : List Symbol) → NFA.Accept (compile r) (start (compile r) ) w → Match r w
+  nfa-regexp r w p = {!!}
 
 
-  module _ {r₁ r₂ : RegExpr} where
-
-    sequence-step₂ : ∀ {w₂ : List Symbol} {s₂ : State (compile r₂)} →
-                  Accept (compile r₂) s₂ w₂ →
-                  Accept (compile (r₁ ∙ r₂)) (inj₂ s₂) w₂
-    sequence-step₂ (accept-[] t) = accept-[] t
-    sequence-step₂ (accept-silent p q) = accept-silent (∈-map⁺ inj₂ p) (sequence-step₂ q)
-    sequence-step₂ (accept-∷ p) = accept-∷ (sequence-step₂ p)
-
-    sequence-step₁ : ∀ {w₁ w₂ : List Symbol} {s₁ : State (compile r₁)} →
-                  Accept (compile r₁) s₁ w₁ →
-                  Accept (compile r₂) (start (compile r₂)) w₂ →
-                  Accept (compile (r₁ ∙ r₂)) (inj₁ s₁) (w₁ ++ w₂)
-    sequence-step₁ (accept-[] t) q = accept-silent {!!} (sequence-step₂ q)
-    sequence-step₁ (accept-silent e p) q = accept-silent {!!} (sequence-step₁ p q)
-    sequence-step₁ (accept-∷ p) q = accept-∷ (sequence-step₁ p q)
+  
+   
