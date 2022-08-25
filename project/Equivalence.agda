@@ -26,7 +26,6 @@ module Equivalence (Symbol : Set) (eq : Decidable {A = Symbol} _≡_) where
   open 1-Symbol Symbol eq
   open EmptySymbol
 
-
   module SequenceStep {r₁ r₂ : RegExpr} where
 
     sequence-step₂ : ∀ {w₂ : List Symbol} {s₂ : State (compile r₂)} →
@@ -40,17 +39,27 @@ module Equivalence (Symbol : Set) (eq : Decidable {A = Symbol} _≡_) where
                   Accept (compile r₁) s₁ w₁ →
                   Accept (compile r₂) (start (compile r₂)) w₂ →
                   Accept (compile (r₁ ∙ r₂)) (inj₁ s₁) (w₁ ++ w₂)
-    sequence-step₁ (accept-[] t) q = accept-silent {!!} (sequence-step₂ q)
-    sequence-step₁ (accept-silent e p) q = accept-silent {!!} (sequence-step₁ p q)
+    sequence-step₁ (accept-[] t) q = accept-silent {!   !} (sequence-step₂ q)
+    sequence-step₁ (accept-silent e p) q = accept-silent {!   !} (sequence-step₁ p q)
     sequence-step₁ (accept-∷ p) q = accept-∷ (sequence-step₁ p q)
-  
-  open SequenceStep 
 
   module ParallelStep {r₁ r₂ : RegExpr} where
-    parallel-stepₗ : ∀ {w₁ w₂ : List Symbol} {s₁ : State (compile r₁)} →
-                  Accept (compile r₁) s₁ w₁ →
-                  Accept (compile (r₁ ⊕ r₂)) (Parallel.ParallelState.silent-left s₁) w₁
-    parallel-stepₗ = {!   !}
+    parallel-stepₗ : ∀ {w : List Symbol} {s₁ : State (compile r₁)} →
+                  Accept (compile r₁) s₁ w →
+                  Accept (compile (r₁ ⊕ r₂)) (Parallel.silent-left s₁) w
+    parallel-stepₗ (accept-[] t)  = accept-[] t
+    parallel-stepₗ (accept-silent p q) = accept-silent (∈-map⁺ Parallel.silent-left p) (parallel-stepₗ q)
+    parallel-stepₗ (accept-∷ p) = accept-∷ (parallel-stepₗ p)
+
+    parallel-stepᵣ : ∀ {w : List Symbol} {s₂ : State (compile r₂)} →
+                  Accept (compile r₂) s₂ w →
+                  Accept (compile (r₁ ⊕ r₂)) (Parallel.silent-right s₂) w
+    parallel-stepᵣ (accept-[] t)  = accept-[] t
+    parallel-stepᵣ (accept-silent p q) = accept-silent (∈-map⁺ Parallel.silent-right p) (parallel-stepᵣ q)
+    parallel-stepᵣ (accept-∷ p) = accept-∷ (parallel-stepᵣ p)
+  
+  open SequenceStep 
+  open ParallelStep
 
   regexp-nfa : ∀ {r : RegExpr} {w : List Symbol} → Match r w → Accept (compile r) (start (compile r) ) w
   regexp-nfa match-ε = accept-[] tt
@@ -58,6 +67,7 @@ module Equivalence (Symbol : Set) (eq : Decidable {A = Symbol} _≡_) where
   ... | yes p | [ ξ ]' = accept-∷ (subst (λ b → Accept (1-symbol a) (if does b then state-accept else state-reject) []) (sym ξ) (accept-[] tt))
   ... | no q | _ = ⊥-elim (q refl)
   regexp-nfa (match-⊕-l p) = {!   !}
+  -- regexp-nfa (match-⊕-l p) = accept-silent {!  !} (parallel-stepₗ (regexp-nfa p))
   regexp-nfa (match-⊕-r p) = {!   !}
   regexp-nfa { r₁ ∙ r₂ } { w } (match-∙ p q)  = {!   !} 
   -- for some reason this gets blocked
@@ -91,4 +101,4 @@ module Equivalence (Symbol : Set) (eq : Decidable {A = Symbol} _≡_) where
 
 
   
-   
+      
