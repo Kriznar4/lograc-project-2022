@@ -39,6 +39,8 @@ module Equivalence (Symbol : Set) (eq : Decidable {A = Symbol} _≡_) where
                   Accept (compile r₁) s₁ w₁ →
                   Accept (compile r₂) (start (compile r₂)) w₂ →
                   Accept (compile (r₁ ∙ r₂)) (inj₁ s₁) (w₁ ++ w₂)
+
+    -- goals #1 and #2: have no idea, how to proceed, probably some substitution, but cannot figure out how
     sequence-step₁ (accept-[] t) q = accept-silent {!  !} (sequence-step₂ q)
     sequence-step₁ (accept-silent e p) q = accept-silent {!  !} (sequence-step₁ p q)
     sequence-step₁ (accept-∷ p) q = accept-∷ (sequence-step₁ p q)
@@ -66,15 +68,18 @@ module Equivalence (Symbol : Set) (eq : Decidable {A = Symbol} _≡_) where
   regexp-nfa (match-^ {a}) with eq a a | inspect (eq a) a
   ... | yes p | [ ξ ]' = accept-∷ (subst (λ b → Accept (1-symbol a) (if does b then state-accept else state-reject) []) (sym ξ) (accept-[] tt))
   ... | no q | _ = ⊥-elim (q refl)
-  regexp-nfa (match-⊕-l p) = {!   !}
+  -- hole #2 and #3: parallel-stepₗ prooves that if word was accepted by Automaton from r₁ beginning in (start) state it should be accepted by Automaton from r₁ ⊕ r₂ in
+  -- equivalent state. Since this automaton begins with silent-start (type ParallelState), which then proceeds to start state of left (or right) branch with silent step,
+  -- we must first preform accept-silent, and then should be able to use parallel-stepₗ. Agda does not want to accept this proof, probably due to parallel-stepₗ
+  -- not being formalised properly...
   -- regexp-nfa (match-⊕-l p) = accept-silent {!  !} (parallel-stepₗ (regexp-nfa p))
+  regexp-nfa (match-⊕-l p) = {!   !}
   regexp-nfa (match-⊕-r p) = {!   !}
+  -- hole #4: for some reason agda cannot solve constraints for regular expressions r₁ and r₂. I brought them into context by pattern matching r using 
+  -- { r₁ ∙ r₂ } as seen in next line. Since agda  still does not know how to solve constraints, I wanted to explicitly tell similar to { r₁ = r₁ } { r₂ = r₂ }
+  -- but do not know how to do both at the same time (pattern matching { r₁ ∙ r₂ } and {r₁ = r₁} { r₂ = r₂ })
+  -- regexp-nfa { r₁ ∙ r₂ } { w } (match-∙ p q) = sequence-step₁ (regexp-nfa p) (regexp-nfa q)
   regexp-nfa { r₁ ∙ r₂ } { w } (match-∙ p q)  = {!   !} 
-  -- for some reason this gets blocked
-  -- regexp-nfa (match-∙ p q) = sequence-step₁ (regexp-nfa p) (regexp-nfa q)
-  -- how to get r₁, r₂, w₁ and w₂ in context? and also r₁ = r₁ etc.?
-  -- { r₁ = r₁ } { r₂ = r₂ }
-
   regexp-nfa match-*-[] = accept-[] tt
   regexp-nfa (match-*-++ p q) = {!   !}
 
@@ -85,4 +90,4 @@ module Equivalence (Symbol : Set) (eq : Decidable {A = Symbol} _≡_) where
 
 
   
-      
+       
